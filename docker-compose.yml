@@ -1,0 +1,37 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: complete_auth_db
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./complete_auth_db:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - '5444:5432'
+    networks:
+      - shared-network
+
+  backend:
+    container_name: complete_auth_backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '8080:8080'
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    networks:
+      - shared-network
+
+volumes:
+  complete_auth_db:
+
+networks:
+  shared-network:
+

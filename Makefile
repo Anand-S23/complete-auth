@@ -1,5 +1,5 @@
 build:
-	@go build -o bin/complete-auth cmd/app/main.go
+	@go build -o bin/complete-auth src/main.go
 
 run: build
 	@./bin/complete-auth

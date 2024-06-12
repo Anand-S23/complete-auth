@@ -2,3 +2,4 @@
 .env.local
 
 bin/
+complete_auth_db/
