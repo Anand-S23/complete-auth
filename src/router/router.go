@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Anand-S23/complete-auth/src/controller"
+	"github.com/Anand-S23/complete-auth/src/middleware"
 	"github.com/gorilla/handlers"
 )
 
@@ -21,6 +22,11 @@ func Fn(fn apiFunc) http.HandlerFunc {
 func NewRouter(c *controller.Controller) http.Handler {
     router := http.NewServeMux()
     router.HandleFunc("GET /ping", Fn(c.Ping)) // Health Check
+
+    router.HandleFunc("POST /register", Fn(c.Register))
+    router.HandleFunc("POST /login", Fn(c.Login))
+    router.HandleFunc("POST /logout", Fn(c.Logout))
+    router.HandleFunc("GET /getAuthUserID", middleware.Auth(Fn(c.GetAuthUserID), c))
 
     corsHandler := handlers.CORS(
         handlers.AllowedOrigins([]string{"http://localhost:3000"}),
