@@ -1,7 +1,7 @@
 package store
 
 import (
-	"database/sql"
+    "database/sql"
 )
 
 type UserRepo interface {

@@ -28,8 +28,11 @@ func NewRouter(c *controller.Controller) http.Handler {
     router.HandleFunc("POST /logout", Fn(c.Logout))
     router.HandleFunc("GET /getAuthUserID", middleware.Auth(Fn(c.GetAuthUserID), c))
 
+    router.HandleFunc("GET /auth/google/login", Fn(c.GoogleLogin))
+    router.HandleFunc("GET /auth/google/callback", Fn(c.GoogleCallback))
+
     corsHandler := handlers.CORS(
-        handlers.AllowedOrigins([]string{"http://localhost:3000"}),
+        handlers.AllowedOrigins([]string{"http://localhost:5713"}),
 		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"}),
 		handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}),
 		handlers.AllowCredentials(),
