@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Anand-S23/complete-auth/src/auth"
-	"github.com/Anand-S23/complete-auth/src/controller"
+	"github.com/Anand-S23/complete-auth/pkg/auth"
+	"github.com/Anand-S23/complete-auth/internal/controller"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/securecookie"
 )

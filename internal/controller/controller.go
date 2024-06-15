@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Anand-S23/complete-auth/src/store"
+	"github.com/Anand-S23/complete-auth/internal/store"
 	"github.com/gorilla/securecookie"
 	"golang.org/x/oauth2"
 )

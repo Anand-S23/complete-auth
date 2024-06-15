@@ -6,13 +6,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/Anand-S23/complete-auth/src/auth"
-	"github.com/Anand-S23/complete-auth/src/models"
+	"github.com/Anand-S23/complete-auth/internal/models"
+	"github.com/Anand-S23/complete-auth/pkg/auth"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
 )
@@ -121,7 +121,7 @@ func getUserDataFromGoogle(code string, config *oauth2.Config) ([]byte, error) {
 		return nil, fmt.Errorf("failed getting user info: %s", err.Error())
 	}
 	defer response.Body.Close()
-	contents, err := ioutil.ReadAll(response.Body)
+	contents, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed read response: %s", err.Error())
 	}

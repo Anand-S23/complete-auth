@@ -5,6 +5,7 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
+// TODO: make scopes dynamic and not hard coded
 func NewGoogleOAuthConfig(callback string, clientId string, clientSecret string) *oauth2.Config{
     return &oauth2.Config {
         RedirectURL: callback,
