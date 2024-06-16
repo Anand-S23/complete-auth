@@ -18,8 +18,15 @@ func main() {
     db := database.InitDB(env.DB_URI, env.PRODUCTION)
     store := store.NewStore(store.NewPgUserRepo(db))
 
-    googleOAuthConfig := auth.NewGoogleOAuthConfig(
-        env.GOOGLE_CALLBACK_URI, env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET)
+    // TODO: Figure out if I want to move this in side the controller itself
+    // probablly do want to, but figure the best way or good way to do it
+    googleOAuthConfig := auth.NewOAuthConfig(
+        auth.ProviderGoogle, 
+        env.GOOGLE_CALLBACK_URI, 
+        env.GOOGLE_CLIENT_ID, 
+        env.GOOGLE_CLIENT_SECRET,
+        []string{"https://www.googleapis.com/auth/userinfo.email"}, // TODO: Figure out a better way to do this?
+    )
 
     controller := controller.NewController(
         store, 
