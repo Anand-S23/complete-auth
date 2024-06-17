@@ -2,6 +2,8 @@ package models
 
 type RegisterDto struct {
     Email     string
+    FirstName string
+    LastName  string
     Password  string
     Confirm   string
 }
