@@ -15,4 +15,5 @@ require (
 require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
+	github.com/oklog/ulid/v2 v2.1.0 // indirect
 )
