@@ -9,6 +9,7 @@ import (
 
 type UserRepo interface {
     InsertUser(context.Context, *models.User) error
+    InsertOAuthUser(ctx context.Context, user *models.User) error
 }
 
 // PostgresUserRepo
@@ -24,12 +25,24 @@ func NewPgUserRepo(db *sql.DB) *PgUserRepo{
 }
 
 func (pg *PgUserRepo) InsertUser(ctx context.Context, user *models.User) error {
-    stmt, err := pg.Db.PrepareContext(ctx, `insert into users (id, email, password_hash, oauth_provider, oauth_id)`)
+    stmt, err := pg.Db.PrepareContext(ctx, `insert into users (id, email, password_hash) values ($1, $2, $3)`)
     if err != nil {
         return err
     }
     defer stmt.Close()
 
-    _, err = stmt.ExecContext(ctx, user.ID, user.Name, user.Email, user.Phone, user.Password, user.CreatedAt)
+    _, err = stmt.ExecContext(ctx, user.ID, user.Email, user.Password)
     return err
 }
+
+func (pg *PgUserRepo) InsertOAuthUser(ctx context.Context, user *models.User) error {
+    stmt, err := pg.Db.PrepareContext(ctx, `insert into users (id, email, oauth_provider, oauth_id) values ($1, $2, $3, $4)`)
+    if err != nil {
+        return err
+    }
+    defer stmt.Close()
+
+    _, err = stmt.ExecContext(ctx, user.ID, user.Email, user.OAuthProvider, user.OAuthID)
+    return err
+}
+
