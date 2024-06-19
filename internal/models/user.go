@@ -3,7 +3,6 @@ package models
 import (
 	"time"
 
-	"github.com/Anand-S23/complete-auth/pkg/auth"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -31,41 +30,31 @@ type UserProfile struct {
 }
 
 func NewUserProfile(userId string, firstName string, lastName string) UserProfile {
-    now, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-
     return UserProfile{
         UserID: userId,
         FirstName: firstName,
         LastName: lastName,
-        CreatedAt: now,
-        UpdatedAt: now,
     }
 }
 
 func NewUser(userData RegisterDto) User {
-    now, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
     id := ulid.Make().String()
 
     return User {
         ID: id,
         Email: userData.Email,
         Password: userData.Password,
-        CreatedAt: now,
-        UpdatedAt: now,
         Profile: NewUserProfile(id, userData.FirstName, userData.LastName),
     }
 }
 
-func NewOAuthUser(provider auth.Provider, oAuthId string, userData RegisterDto) User {
-    now, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+func NewOAuthUser(userData OAuthRegisterDto) User {
     id := ulid.Make().String()
 
     return User {
         ID: id,
-        OAuthProvider: string(provider),
-        OAuthID: oAuthId,
-        CreatedAt: now,
-        UpdatedAt: now,
+        OAuthProvider: string(userData.Provider),
+        OAuthID: userData.OAuthID,
         Profile: NewUserProfile(id, userData.FirstName, userData.LastName),
     }
 }
