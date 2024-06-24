@@ -8,8 +8,17 @@ import (
 )
 
 type UserRepo interface {
+    InsertUserWithProfile(context.Context, *models.User) error
+    // TODO: Merge into one
     InsertUser(context.Context, *models.User) error
-    InsertOAuthUser(ctx context.Context, user *models.User) error
+    InsertOAuthUser(context.Context, *models.User) error
+    // 
+    UpdateUser(context.Context, *models.User) (*models.User, error)
+    GetUserByID(context.Context, string) (*models.User, error)
+    GetUserByEmail(context.Context, string) (*models.User, error)
+    DeleteUser()
+
+    GetUserProfileByID(context.Context, string) (*models.User, error)
 }
 
 // PostgresUserRepo
