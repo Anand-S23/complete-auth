@@ -2,39 +2,42 @@ package store
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/Anand-S23/complete-auth/internal/models"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 type UserRepo interface {
-    InsertUserWithProfile(context.Context, *models.User) error
-    // TODO: Merge into one
     InsertUser(context.Context, *models.User) error
-    InsertOAuthUser(context.Context, *models.User) error
-    // 
-    UpdateUser(context.Context, *models.User) (*models.User, error)
-    GetUserByID(context.Context, string) (*models.User, error)
-    GetUserByEmail(context.Context, string) (*models.User, error)
-    DeleteUser()
 
-    GetUserProfileByID(context.Context, string) (*models.User, error)
+    GetUser(context.Context, string) (*models.User, error)
+    GetUserByEmail(context.Context, string) (*models.User, error)
+    GetBaseUser(context.Context, string) (*models.User, error)
+    GetBaseUserByEmail(context.Context, string) (*models.User, error)
+    GetUserProfile(context.Context, string) (*models.User, error)
+
+    UpdateUser(context.Context, *models.User) error
+    UpdateBaseUser(context.Context, *models.User) error
+    UpdateUserProfile(context.Context, *models.UserProfile) error
+
+    DeleteUser(context.Context, string) error
 }
 
 // PostgresUserRepo
 
 type PgUserRepo struct {
-    Db *sql.DB
+    Db *sqlx.DB
 }
 
-func NewPgUserRepo(db *sql.DB) *PgUserRepo{
+func NewPgUserRepo(db *sqlx.DB) *PgUserRepo{
     return &PgUserRepo {
         Db: db,
     }
 }
 
 func (pg *PgUserRepo) InsertUser(ctx context.Context, user *models.User) error {
-    tx, err := pg.Db.BeginTx(ctx, nil)
+    tx, err := pg.Db.BeginTxx(ctx, nil)
     if err != nil {
         return err
     }
@@ -47,24 +50,20 @@ func (pg *PgUserRepo) InsertUser(ctx context.Context, user *models.User) error {
         }
     }()
 
-    userInsertStatment, err := tx.PrepareContext(ctx, `insert into users (id, email, password_hash) values ($1, $2, $3)`)
-    if err != nil {
-        return err
-    }
-    defer userInsertStatment.Close()
-
-    _, err = userInsertStatment.ExecContext(ctx, user.ID, user.Email, user.Password)
+    insertUserCommand := `
+        insert into users (id, email, password_hash, oauth_provider, oauth_id) 
+        values (:id, :email, :password_hash, :oauth_provider, :oauth_id)
+    `
+    _, err = tx.NamedExecContext(ctx, insertUserCommand, user)
     if err != nil {
         return err
     }
 
-    profileInsertStatment, err := tx.PrepareContext(ctx, `insert into user_profiles (user_id, first_name, last_name, phone_number, pfp_url) values ($1, $2, $3, $4, $5)`)
-    if err != nil {
-        return err
-    }
-    defer profileInsertStatment.Close()
-
-    _, err = profileInsertStatment.ExecContext(ctx, user.ID, user.Email, user.Password)
+    insertProfileCommand := `
+        insert into user_profiles (user_id, first_name, last_name, phone_number, pfp_url) 
+        values (:user_id, :first_name, :last_name, :phone_number, :pfp_url)
+    `
+    _, err = tx.NamedExecContext(ctx, insertProfileCommand, user.Profile)
     if err != nil {
         return err
     }
@@ -72,10 +71,10 @@ func (pg *PgUserRepo) InsertUser(ctx context.Context, user *models.User) error {
     return nil
 }
 
-func (pg *PgUserRepo) InsertOAuthUser(ctx context.Context, user *models.User) error {
-    tx, err := pg.Db.BeginTx(ctx, nil)
+func (pg *PgUserRepo) GetUser(ctx context.Context, id string) (*models.User, error) {
+    tx, err := pg.Db.BeginTxx(ctx, nil)
     if err != nil {
-        return err
+        return nil, err
     }
 
     defer func() {
@@ -86,28 +85,17 @@ func (pg *PgUserRepo) InsertOAuthUser(ctx context.Context, user *models.User) er
         }
     }()
 
-    userInsertStatment, err := tx.PrepareContext(ctx, `insert into users (id, email, oauth_provider, oauth_id) values ($1, $2, $3, $4)`)
+    var user models.User
+    err = tx.GetContext(ctx, &user, `select * from users where id = $1`, id)
     if err != nil {
-        return err
-    }
-    defer userInsertStatment.Close()
-
-    _, err = userInsertStatment.ExecContext(ctx, user.ID, user.Email, user.OAuthProvider, user.OAuthID)
-    if err != nil {
-        return err
+        return nil, err
     }
 
-    profileInsertStatment, err := tx.PrepareContext(ctx, `insert into user_profiles (user_id, first_name, last_name, phone_number, pfp_url) values ($1, $2, $3, $4, $5)`)
+    err = tx.GetContext(ctx, &user.Profile, `select * from user_profiles where user_id = $1`, id)
     if err != nil {
-        return err
-    }
-    defer profileInsertStatment.Close()
-
-    _, err = profileInsertStatment.ExecContext(ctx, user.ID, user.Email, user.Password)
-    if err != nil {
-        return err
+        return nil, err
     }
 
-    return nil
+    return &user, nil
 }
 

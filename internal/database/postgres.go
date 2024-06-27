@@ -1,14 +1,14 @@
 package database
 
 import (
-	"database/sql"
 	"log"
 
-    _ "github.com/lib/pq"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
-func InitDB(dbUrl string, production bool) *sql.DB {
-    db, err := sql.Open("postgres", dbUrl)
+func InitDB(dbUrl string, production bool) *sqlx.DB {
+    db, err := sqlx.Open("postgres", dbUrl)
     if err != nil {
         log.Fatal("Could not open db :: ", err)
     }
