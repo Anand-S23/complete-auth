@@ -145,3 +145,44 @@ func (pg *PgUserRepo) GetUserProfile(ctx context.Context, id string) (*models.Us
     return &profile, err
 }
 
+func (pg *PgUserRepo) UpdateUser(ctx context.Context, user *models.User) error {
+    tx, err := pg.Db.BeginTxx(ctx, nil)
+    if err != nil {
+        return err
+    }
+
+    defer func() {
+        if err != nil {
+            tx.Rollback()
+        } else {
+            err = tx.Commit()
+        }
+    }()
+
+    updateUserCommand := `update users set email = :email, password_hash = :password_hash where id = $1`
+    _, err = tx.NamedExecContext(ctx, updateUserCommand, user)
+    if err != nil {
+        return nil
+    }
+
+    updateProfileCommand := `update user_profiles set first_name = :first_name, last_name = :last_name, phone_number = :phone_number, pfp_url = :pfp_url where user_id = $1`
+    _, err = tx.NamedExecContext(ctx, updateProfileCommand, user.Profile)
+    if err != nil {
+        return nil
+    }
+
+    return nil
+}
+
+func (pg *PgUserRepo) UpdateBaseUser(ctx context.Context, user *models.User) error {
+    updateUserCommand := `update users set email = :email, password_hash = :password_hash where id = $1`
+    _, err := pg.Db.NamedExecContext(ctx, updateUserCommand, user)
+    return err
+}
+
+func (pg *PgUserRepo) UpdateUserProfile(ctx context.Context, user *models.User) error {
+    updateProfileCommand := `update user_profiles set first_name = :first_name, last_name = :last_name, phone_number = :phone_number, pfp_url = :pfp_url where user_id = $1`
+    _, err := pg.Db.NamedExecContext(ctx, updateProfileCommand, user)
+    return err
+}
+
