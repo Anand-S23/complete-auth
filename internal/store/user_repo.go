@@ -186,3 +186,30 @@ func (pg *PgUserRepo) UpdateUserProfile(ctx context.Context, user *models.User) 
     return err
 }
 
+func (pg *PgUserRepo) DeleteUser(ctx context.Context, id string) error {
+    tx, err := pg.Db.BeginTxx(ctx, nil)
+    if err != nil {
+        return err
+    }
+
+    defer func() {
+        if err != nil {
+            tx.Rollback()
+        } else {
+            err = tx.Commit()
+        }
+    }()
+
+    _, err = tx.ExecContext(ctx, `delete from users where id = $1`, id)
+    if err != nil {
+        return err
+    }
+
+    _, err = tx.ExecContext(ctx, `delete from user_profiles where user_id = $1`, id)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
