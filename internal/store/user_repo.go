@@ -150,3 +150,26 @@ func (pg *PgUserRepo) GetBaseUser(ctx context.Context, id string) (*models.User,
     return &user, nil
 }
 
+func (pg *PgUserRepo) GetBaseUserByEmail(ctx context.Context, email string) (*models.User, error) {
+    tx, err := pg.Db.BeginTxx(ctx, nil)
+    if err != nil {
+        return nil, err
+    }
+
+    defer func() {
+        if err != nil {
+            tx.Rollback()
+        } else {
+            err = tx.Commit()
+        }
+    }()
+
+    var user models.User
+    err = tx.GetContext(ctx, &user, `select * from users where email = $1`, email)
+    if err != nil {
+        return nil, err
+    }
+
+    return &user, nil
+}
+
