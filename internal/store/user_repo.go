@@ -128,48 +128,20 @@ func (pg *PgUserRepo) GetUserByEmail(ctx context.Context, email string) (*models
 }
 
 func (pg *PgUserRepo) GetBaseUser(ctx context.Context, id string) (*models.User, error) {
-    tx, err := pg.Db.BeginTxx(ctx, nil)
-    if err != nil {
-        return nil, err
-    }
-
-    defer func() {
-        if err != nil {
-            tx.Rollback()
-        } else {
-            err = tx.Commit()
-        }
-    }()
-
     var user models.User
-    err = tx.GetContext(ctx, &user, `select * from users where id = $1`, id)
-    if err != nil {
-        return nil, err
-    }
-
-    return &user, nil
+    err := pg.Db.GetContext(ctx, &user, `select * from users where id = $1`, id)
+    return &user, err
 }
 
 func (pg *PgUserRepo) GetBaseUserByEmail(ctx context.Context, email string) (*models.User, error) {
-    tx, err := pg.Db.BeginTxx(ctx, nil)
-    if err != nil {
-        return nil, err
-    }
-
-    defer func() {
-        if err != nil {
-            tx.Rollback()
-        } else {
-            err = tx.Commit()
-        }
-    }()
-
     var user models.User
-    err = tx.GetContext(ctx, &user, `select * from users where email = $1`, email)
-    if err != nil {
-        return nil, err
-    }
+    err := pg.Db.GetContext(ctx, &user, `select * from users where email = $1`, email)
+    return &user, err
+}
 
-    return &user, nil
+func (pg *PgUserRepo) GetUserProfile(ctx context.Context, id string) (*models.UserProfile, error) {
+    var profile models.UserProfile
+    err := pg.Db.GetContext(ctx, &profile, `select * from user_profiles where user_id = $1`, id)
+    return &profile, err
 }
 
