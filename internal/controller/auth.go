@@ -35,8 +35,11 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) error {
     userData.Password = string(hashedPassword)
 
     user := models.NewUser(userData)
-    // TODO: Save to db
-
+    err = c.store.UserRepo.InsertUser(context.Background(), &user)
+	if err != nil {
+        log.Println("Error inserting user into db")
+        return WriteJSON(w, http.StatusInternalServerError, ErrMsg("Internal server error occured, please try again later"))
+	}
     successMsg := map[string]string {
         "message": "User created successfully",
         "userID": user.ID,
@@ -53,9 +56,14 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) error {
         return WriteJSON(w, http.StatusBadRequest, ErrMsg("Could not parse login data"))
     }
 
-    // TODO: Try to get user from db
-    
-    user := models.User{}
+    user, err := c.store.UserRepo.GetUserByEmail(context.Background(), loginData.Email)
+    if err != nil {
+        // TODO: figure out what error this is because it could be an actual password and not the user typing in wrong email
+        log.Println("Passwords do not match")
+        return WriteJSON(w, http.StatusBadRequest, ErrMsg("Incorrect email or password, please try again"))
+    }
+
+    // TODO: Maybe move abstract this out
     err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginData.Password))
 	if err != nil {
         log.Println("Passwords do not match")
@@ -80,6 +88,7 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) error {
         "message": "User logged in successfully",
     }
     log.Println("User successfully logged in")
+    c.store.UserRepo.UpdateLastLogin(context.Background(), user.ID)
     return WriteJSON(w, http.StatusOK, successMsg)
 }
 

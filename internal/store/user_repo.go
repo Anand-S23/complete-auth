@@ -20,6 +20,7 @@ type UserRepo interface {
     UpdateUser(context.Context, *models.User) error
     UpdateBaseUser(context.Context, *models.User) error
     UpdateUserProfile(context.Context, *models.UserProfile) error
+    UpdateLastLogin(context.Context, string)
 
     DeleteUser(context.Context, string) error
 }
@@ -184,6 +185,10 @@ func (pg *PgUserRepo) UpdateUserProfile(ctx context.Context, user *models.User) 
     updateProfileCommand := `update user_profiles set first_name = :first_name, last_name = :last_name, phone_number = :phone_number, pfp_url = :pfp_url where user_id = $1`
     _, err := pg.Db.NamedExecContext(ctx, updateProfileCommand, user)
     return err
+}
+
+func (pg *PgUserRepo) UpdateLastLogin(ctx context.Context, id string) {
+    pg.Db.ExecContext(ctx, `update user_profiles set last_login = NOW() where id = $1`, id)
 }
 
 func (pg *PgUserRepo) DeleteUser(ctx context.Context, id string) error {
