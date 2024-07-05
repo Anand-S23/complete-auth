@@ -15,7 +15,7 @@ type UserRepo interface {
     GetUserByEmail(context.Context, string) (*models.User, error)
     GetBaseUser(context.Context, string) (*models.User, error)
     GetBaseUserByEmail(context.Context, string) (*models.User, error)
-    GetUserProfile(context.Context, string) (*models.User, error)
+    GetUserProfile(context.Context, string) (*models.UserProfile, error)
 
     UpdateUser(context.Context, *models.User) error
     UpdateBaseUser(context.Context, *models.User) error
@@ -181,7 +181,7 @@ func (pg *PgUserRepo) UpdateBaseUser(ctx context.Context, user *models.User) err
     return err
 }
 
-func (pg *PgUserRepo) UpdateUserProfile(ctx context.Context, user *models.User) error {
+func (pg *PgUserRepo) UpdateUserProfile(ctx context.Context, user *models.UserProfile) error {
     updateProfileCommand := `update user_profiles set first_name = :first_name, last_name = :last_name, phone_number = :phone_number, pfp_url = :pfp_url where user_id = $1`
     _, err := pg.Db.NamedExecContext(ctx, updateProfileCommand, user)
     return err
