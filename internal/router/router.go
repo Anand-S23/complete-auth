@@ -23,7 +23,6 @@ func NewRouter(c *controller.Controller) *http.ServeMux {
     router.HandleFunc("GET /auth/google/login", Fn(c.GoogleLogin))
     router.HandleFunc("GET /auth/google/callback", Fn(c.GoogleCallback))
 
-
     return router
 }
 

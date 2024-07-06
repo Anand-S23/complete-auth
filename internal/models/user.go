@@ -1,8 +1,10 @@
 package models
 
 import (
+	"strings"
 	"time"
 
+	"github.com/Anand-S23/complete-auth/pkg/auth"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -29,11 +31,13 @@ type UserProfile struct {
 	UpdatedAt   time.Time `db:"updated_at"   json:"updatedAt"`
 }
 
-func NewUserProfile(userId string, firstName string, lastName string) UserProfile {
+func NewUserProfile(userId string, firstName string, lastName string, phoneNumber string, pfpURL string) UserProfile {
     return UserProfile{
         UserID: userId,
         FirstName: firstName,
         LastName: lastName,
+        PhoneNumber: phoneNumber,
+        PfpURL: pfpURL,
     }
 }
 
@@ -44,18 +48,28 @@ func NewUser(userData RegisterDto) User {
         ID: id,
         Email: userData.Email,
         Password: userData.Password,
-        Profile: NewUserProfile(id, userData.FirstName, userData.LastName),
+        Profile: NewUserProfile(id, userData.FirstName, userData.LastName, "", ""),
     }
 }
 
-func NewOAuthUser(userData OAuthRegisterDto) User {
+func splitName(name string) (string, string) {
+    arrName := strings.Split(name, " ")
+    if len(arrName) == 1 {
+        return name, ""
+    }
+
+    return arrName[0], arrName[len(arrName) - 1]
+}
+
+func NewOAuthUser(provider auth.Provider, userData OAuthRegisterDto) User {
     id := ulid.Make().String()
+    firstName, lastName := splitName(userData.Name)
 
     return User {
         ID: id,
-        OAuthProvider: string(userData.Provider),
+        OAuthProvider: string(provider),
         OAuthID: userData.OAuthID,
-        Profile: NewUserProfile(id, userData.FirstName, userData.LastName),
+        Profile: NewUserProfile(id, firstName, lastName, "", userData.PfpURL),
     }
 }
 

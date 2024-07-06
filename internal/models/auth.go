@@ -1,7 +1,5 @@
 package models
 
-import "github.com/Anand-S23/complete-auth/pkg/auth"
-
 type RegisterDto struct {
     Email     string
     FirstName string
@@ -16,10 +14,10 @@ type LoginDto struct {
 }
 
 type OAuthRegisterDto struct {
-    Provider  auth.Provider
-    OAuthID   string
-    Email     string
-    FirstName string
-    LastName  string
+    OAuthID       string `json:"id"`
+    Email         string `json:"email"`
+    VerifiedEmail bool   `json:"verified_email"`
+    Name          string `json:"name"`
+    PfpURL        string `json:"picture"`
 }
 

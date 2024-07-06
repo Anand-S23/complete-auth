@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"crypto/rand"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -160,9 +161,30 @@ func (c *Controller) GoogleCallback(w http.ResponseWriter, r *http.Request) erro
 		return nil
 	}
 
-	// GetOrCreate User in your db.
+    var oauthRegisterData models.OAuthRegisterDto
+    err = json.Unmarshal(data, &oauthRegisterData)
+    if err != nil {
+        // TODO: this might not work as expected, might need to acutally redirect here
+        return WriteJSON(w, http.StatusBadRequest, ErrMsg("Could not parse oauth data"))
+    }
+
+    user, err := c.store.UserRepo.GetBaseUserByEmail(context.Background(), oauthRegisterData.Email)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            oauthUser := models.NewOAuthUser(auth.ProviderGoogle, oauthRegisterData)
+            err = c.store.UserRepo.InsertUser(context.Background(), &oauthUser)
+            if err != nil {
+                // TODO: this might not work as expected, might need to acutally redirect here
+                return WriteJSON(w, http.StatusBadRequest, ErrMsg("Could not insert user into database"))
+            }
+        } else {
+            // TODO: this might not work as expected, might need to acutally redirect here
+            return WriteJSON(w, http.StatusBadRequest, ErrMsg("Could not get user from database"))
+        }
+    }
+    c.store.UserRepo.UpdateLastLogin(context.Background(), user.ID)
 	// Redirect or response with a token.
-	// More code .....
+
 	fmt.Fprintf(w, "UserInfo: %s\n", data)
     return nil
 }
