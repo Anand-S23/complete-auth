@@ -1,11 +1,13 @@
 package models
 
 import (
+	"log"
 	"strings"
 	"time"
 
 	"github.com/Anand-S23/complete-auth/pkg/auth"
 	"github.com/oklog/ulid/v2"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -29,6 +31,20 @@ type UserProfile struct {
 	PfpURL      string    `db:"pfp_url"      json:"pfpURL"`
 	CreatedAt   time.Time `db:"created_at"   json:"createdAt"`
 	UpdatedAt   time.Time `db:"updated_at"   json:"updatedAt"`
+}
+
+func (u *User) SetHashedPassword(password string) error {
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+        return err
+	}
+
+    u.Password = string(hashedPassword)
+    return nil
+}
+
+func (u *User) ValidatePassword(password string) error {
+     return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 }
 
 func NewUserProfile(userId string, firstName string, lastName string, phoneNumber string, pfpURL string) UserProfile {

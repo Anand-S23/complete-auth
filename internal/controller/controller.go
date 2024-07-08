@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/Anand-S23/complete-auth/internal/store"
