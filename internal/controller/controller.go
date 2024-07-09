@@ -2,10 +2,10 @@ package controller
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 
 	"github.com/Anand-S23/complete-auth/internal/store"
+	"github.com/Anand-S23/complete-auth/pkg/config"
 	"github.com/gorilla/securecookie"
 	"golang.org/x/oauth2"
 )
@@ -24,17 +24,19 @@ type Controller struct {
     store *store.Store
     production   bool
     googleOAuthConfig *oauth2.Config
+    feURI        string
     JwtSecretKey []byte
     CookieSecret *securecookie.SecureCookie
 }
 
-func NewController(store *store.Store, secretKey []byte, cookieHashKey []byte, cookieBlockKey []byte, production bool, googleOAuthConfig *oauth2.Config) *Controller {
+func NewController(store *store.Store, env *config.EnvVars, oauthConfig *oauth2.Config) *Controller {
     return &Controller {
         store: store,
-        production: production,
-        googleOAuthConfig: googleOAuthConfig,
-        JwtSecretKey: secretKey,
-        CookieSecret: securecookie.New(cookieHashKey, cookieBlockKey),
+        production: env.PRODUCTION,
+        googleOAuthConfig: oauthConfig,
+        feURI: env.FE_URI,
+        JwtSecretKey: env.JWT_SECRET,
+        CookieSecret: securecookie.New(env.COOKIE_HASH_KEY, env.COOKIE_BLOCK_KEY),
     }
 }
 
