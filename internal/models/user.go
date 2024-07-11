@@ -1,12 +1,11 @@
 package models
 
 import (
-	"log"
 	"strings"
 	"time"
 
 	"github.com/Anand-S23/complete-auth/pkg/auth"
-	"github.com/oklog/ulid/v2"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -58,7 +57,7 @@ func NewUserProfile(userId string, firstName string, lastName string, phoneNumbe
 }
 
 func NewUser(userData RegisterDto) User {
-    id := ulid.Make().String()
+    id := uuid.NewString()
 
     return User {
         ID: id,
@@ -78,11 +77,12 @@ func splitName(name string) (string, string) {
 }
 
 func NewOAuthUser(provider auth.Provider, userData OAuthRegisterDto) User {
-    id := ulid.Make().String()
+    id := uuid.NewString()
     firstName, lastName := splitName(userData.Name)
 
     return User {
         ID: id,
+        Email: userData.Email,
         OAuthProvider: string(provider),
         OAuthID: userData.OAuthID,
         Profile: NewUserProfile(id, firstName, lastName, "", userData.PfpURL),

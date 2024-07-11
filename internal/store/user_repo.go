@@ -188,7 +188,7 @@ func (pg *PgUserRepo) UpdateUserProfile(ctx context.Context, user *models.UserPr
 }
 
 func (pg *PgUserRepo) UpdateLastLogin(ctx context.Context, id string) {
-    pg.Db.ExecContext(ctx, `update user_profiles set last_login = NOW() where id = $1`, id)
+    pg.Db.ExecContext(ctx, `update users set last_login = NOW() where id = $1`, id)
 }
 
 func (pg *PgUserRepo) DeleteUser(ctx context.Context, id string) error {

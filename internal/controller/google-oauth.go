@@ -17,9 +17,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const (
-    oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
-)
+const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
 func generateStateOAuthCookie(w http.ResponseWriter) string {
 	var expiration = time.Now().Add(20 * time.Minute)
@@ -34,8 +32,6 @@ func generateStateOAuthCookie(w http.ResponseWriter) string {
 }
 
 func getUserDataFromGoogle(code string, config *oauth2.Config) ([]byte, error) {
-	// Use code to get token and get user info from Google.
-
 	token, err := config.Exchange(context.Background(), code)
 	if err != nil {
 		return nil, fmt.Errorf("code exchange wrong: %s", err.Error())
@@ -60,39 +56,53 @@ func (c *Controller) GoogleLogin(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *Controller) GoogleCallback(w http.ResponseWriter, r *http.Request) error {
-	oauthState, _ := r.Cookie("oauthstate")
+    baseRedirectURL := fmt.Sprintf("%s/", c.feURI)
+    serverErrorRedirectURL := fmt.Sprintf("%s/login?serverError", c.feURI)
+    accountTypeErrorRedirectURL := fmt.Sprintf("%s/login?accountTypeError", c.feURI)
 
+	oauthState, _ := r.Cookie("oauthstate")
 	if r.FormValue("state") != oauthState.Value {
 		log.Println("invalid oauth google state")
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, serverErrorRedirectURL, http.StatusTemporaryRedirect)
 		return nil
 	}
 
 	data, err := getUserDataFromGoogle(r.FormValue("code"), c.googleOAuthConfig)
 	if err != nil {
+		log.Println("could not get user data from google")
+		http.Redirect(w, r, serverErrorRedirectURL, http.StatusTemporaryRedirect)
+		return nil
 	}
 
     var oauthRegisterData models.OAuthRegisterDto
     err = json.Unmarshal(data, &oauthRegisterData)
     if err != nil {
+		log.Println("error serializing register data")
+		http.Redirect(w, r, serverErrorRedirectURL, http.StatusTemporaryRedirect)
+		return nil
     }
 
-    // TODO: Just because the user exists in the database does not mean that they used google oauth to login
-    // Need to check for that
     user, err := c.store.UserRepo.GetBaseUserByEmail(context.Background(), oauthRegisterData.Email)
     if err != nil {
         if err == sql.ErrNoRows {
+            log.Println("user does not exist creating user")
             oauthUser := models.NewOAuthUser(auth.ProviderGoogle, oauthRegisterData)
             err = c.store.UserRepo.InsertUser(context.Background(), &oauthUser)
             if err != nil {
+                log.Println("error inserting user into db")
+                http.Redirect(w, r, serverErrorRedirectURL, http.StatusTemporaryRedirect)
+                return nil
             }
         } else {
+            log.Println("error reteriving user into db")
+            http.Redirect(w, r, serverErrorRedirectURL, http.StatusTemporaryRedirect)
+            return nil
         }
+    } else if user.OAuthProvider != string(auth.ProviderGoogle) {
+        log.Println("error reteriving user into db")
+        http.Redirect(w, r, accountTypeErrorRedirectURL, http.StatusTemporaryRedirect)
+        return nil
     }
-    if user.OAuthProvider != string(auth.ProviderGoogle) {
-
-    }
-    c.store.UserRepo.UpdateLastLogin(context.Background(), user.ID)
 
     expDuration := time.Hour * 24
     token, err := auth.GenerateToken(c.JwtSecretKey, user.ID, expDuration)
@@ -106,9 +116,10 @@ func (c *Controller) GoogleCallback(w http.ResponseWriter, r *http.Request) erro
     }
     http.SetCookie(w, cookie)
 
-    // TODO: redirect
-
-	fmt.Fprintf(w, "UserInfo: %s\n", data)
+	// fmt.Fprintf(w, "UserInfo: %s\n", data)
+    log.Println("login sucessful")
+    c.store.UserRepo.UpdateLastLogin(context.Background(), user.ID)
+    http.Redirect(w, r, baseRedirectURL, http.StatusTemporaryRedirect)
     return nil
 }
 

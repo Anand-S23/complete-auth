@@ -8,7 +8,6 @@ require (
 	github.com/gorilla/securecookie v1.1.2
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.10.9
-	github.com/oklog/ulid/v2 v2.1.0
 	golang.org/x/crypto v0.24.0
 	golang.org/x/oauth2 v0.21.0
 )
@@ -16,4 +15,5 @@ require (
 require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 )
